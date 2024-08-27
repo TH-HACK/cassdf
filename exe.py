@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import os
+os.system('pip install telebot')
 import platform
 import hashlib
 import telebot
