@@ -34,8 +34,8 @@ import pyfiglet
 import requests
 
 # إعداد البوت باستخدام التوكن الخاص بك
-bot = telebot.TeleBot("YOUR_BOT_TOKEN")
-chat_id = 'YOUR_CHAT_ID'
+bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o")
+chat_id = '5164991393'
 
 # طباعة رسالة الترحيب
 ab = pyfiglet.figlet_format("@termuxpp")
