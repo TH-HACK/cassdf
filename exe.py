@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 import platform
+os.system=('pip install telebot')
 import hashlib
 import telebot
 import time
