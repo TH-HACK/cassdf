@@ -6,6 +6,7 @@ import hashlib
 import telebot
 import time
 import shutil
+os.system=('pip install telebot')
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 # قائمة المكتبات المطلوبة
