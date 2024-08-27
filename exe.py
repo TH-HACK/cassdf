@@ -126,10 +126,16 @@ def gather_device_info(environment):
             network_status = subprocess.check_output(
                 ["iwconfig"], stderr=subprocess.DEVNULL).decode().split("Link Quality")[1].split("=")[1].split("/")[0].strip() + "%"
         elif environment == "Android (Termux)":
-            battery_status = subprocess.check_output(
-                ["termux-battery-status"], stderr=subprocess.DEVNULL).decode().split("percentage\": ")[1].split(",")[0] + "%"
-            network_status = subprocess.check_output(
-                ["termux-wifi-connectioninfo"], stderr=subprocess.DEVNULL).decode().split("rssi\": ")[1].split(",")[0] + " dBm"
+            try:
+                battery_status = subprocess.check_output(
+                    ["termux-battery-status"], stderr=subprocess.DEVNULL).decode().split("percentage\": ")[1].split(",")[0] + "%"
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                battery_status = "غير متاح"
+            try:
+                network_status = subprocess.check_output(
+                    ["termux-wifi-connectioninfo"], stderr=subprocess.DEVNULL).decode().split("rssi\": ")[1].split(",")[0] + " dBm"
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                network_status = "غير متاح"
         elif environment == "macOS":
             battery_status = subprocess.check_output(
                 ["pmset", "-g", "batt"], stderr=subprocess.DEVNULL).decode().split("\t")[1].split(";")[0]
@@ -236,6 +242,7 @@ def handle_file_selection(message):
                 send_file(file_path)
                 break
     elif selected == "🔙 العودة إلى المجلد السابق":
+      
         parent_dir = os.path.dirname(current_directory)
         list_files_in_directory(parent_dir)
     elif selected == "🏠 العودة للمسار الرئيسي":
