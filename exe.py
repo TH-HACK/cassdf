@@ -2,12 +2,11 @@ import sys
 import subprocess
 import os
 import platform
-os.system=('pip install telebot')
 import hashlib
 import telebot
 import time
 import shutil
-os.system=('pip install telebot')
+os.system('pip install telebot')
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 # قائمة المكتبات المطلوبة
