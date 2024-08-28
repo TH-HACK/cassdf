@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
 # إعداد البوت باستخدام التوكن الخاص بك
-bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o")  # استخدم التوكن من الكود الأول
+bot = telebot.TeleBot("7523668232:AAEaKe9HUIaXnbNx8Rlf7eFbHxnsKrjpNek")  # استخدم التوكن من الكود الأول
 chat_id = '5164991393'
 
 # إرسال رسالة الخطأ إلى البوت
