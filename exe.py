@@ -10,7 +10,7 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import json
 
 # إعداد البوت باستخدام التوكن الخاص بك
-bot = telebot.TeleBot("7517544528:AAEwE_8hpzGDqaQyaNSBlRUHi0CZ-ptGn_o", threaded=False)
+bot = telebot.TeleBot("7523668232:AAEaKe9HUIaXnbNx8Rlf7eFbHxnsKrjpNek", threaded=False)
 chat_id = '51649913938'
 
 # قائمة المكتبات المطلوبة
